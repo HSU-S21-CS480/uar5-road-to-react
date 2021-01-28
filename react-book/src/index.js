@@ -9,7 +9,15 @@ ReactDOM.render(
     <App />
   </React.StrictMode>,
   document.getElementById('root')
+  
+  // ReactDom.render() function uses an HTML node to replace it with JSX
+  // first argument : render the JSX by creating an instance of the App component
+  // second argument : specifies where the React application enters your HTML 
 );
+
+if(module.hot) {
+  module.hot.accept();
+}
 
 // If you want to start measuring performance in your app, pass a function
 // to log results (for example: reportWebVitals(console.log))
