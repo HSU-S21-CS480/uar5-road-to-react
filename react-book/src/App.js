@@ -4,13 +4,26 @@ import "bootstrap/dist/css/bootstrap.min.css";
 // import { Container, Row, Col } from "react-bootstrap";
 // import DataList from '../src/components/DataList'
 
-const welcome = {
-  greeting: "Good Morning!",
-};
-
 function getTitle(title) {
   return "My " + title;
 }
+
+const useSemiPersistentState = (key, initialState) => {
+  /** useSemiPersistantState
+   *  - pass in a key in order to fix overwrite of the 'value' allocated in local storage
+   *    when custom hook is used more than once
+   *  - give custom hook initial state from outside
+   *  - manages state yet synchronizes with the local storage
+   *  - no fully consistent; clearing local storage browser deletes relevant data from application
+   */
+  const [value, setValue] = React.useState(
+    localStorage.getItem(key) || initialState
+  );
+  React.useEffect(() => {
+    localStorage.setItem(key, value);
+  }, [value, key]);
+  return [value, setValue];
+};
 
 // refactor: component-definition
 const App = () => {
@@ -39,11 +52,15 @@ const App = () => {
     },
   ];
 
-  const [searchTerm, setSearchTerm] = React.useState("");
+  // const [searchTerm, setSearchTerm] = React.useState(
+  //   localStorage.getItem("search") || "React"
+  // );
+
+  const [searchTerm, setSearchTerm] = useSemiPersistentState("search", "React");
 
   const handleSearch = (event) => {
     setSearchTerm(event.target.value);
-    console.log(event.target.value);
+    localStorage.setItem("search", event.target.value);
   };
 
   const searchedStories = stories.filter((story) => {
@@ -53,7 +70,6 @@ const App = () => {
   return (
     <div className="App">
       <h1> {getTitle("Hacker Stories")}</h1>
-      <p> {welcome.greeting} </p>
 
       <Search onSearch={handleSearch} />
       <hr />
@@ -68,15 +84,15 @@ const List = ({ list }) =>
   /**
    * spread operator: allows to spread all key/value pairs of an object to another object
    *  - instead of passing each property one at a time via props from List to Item component,
-   *    we can use Javascripts spead operator to pass all the object's key/value pairs as 
+   *    we can use Javascripts spead operator to pass all the object's key/value pairs as
    *    attribute/value pairs to a JSX element
-   * 
+   *
    *  rest parameters: allows a function to accept an infinite number of arguments as an array,
    *                    providing a way to represent variadic functions in js
    *   - happens always as the last part of an object destructing; on the right side of an assignment
-   *   - always used to seperate an object from some of its properties 
+   *   - always used to seperate an object from some of its properties
    */
-  list.map(({ objectID, ...item}) => <Item key={ objectID} {...item} />);
+  list.map(({ objectID, ...item }) => <Item key={objectID} {...item} />);
 
 const Item = ({ title, url, author, num_comments, points }) => (
   <div>
@@ -84,18 +100,25 @@ const Item = ({ title, url, author, num_comments, points }) => (
       <a href={url}> {title} </a>
     </span>
 
-    <span>{ author }</span>
-    <span>{ num_comments }</span>
-    <span>{ points }</span>
+    <span>{author}</span>
+    <span>{num_comments}</span>
+    <span>{points}</span>
   </div>
 );
 const Search = ({ search, onSearch }) => {
-  // searchTerm: represents the current state
-  // setSearchTerm: a function to update this state (state updater function)
-  const [searchTerm, setSearchTerm] = React.useState(localStorage.getItem('search') || 'React');
-  
+  /**
+   * searchTerm: represents the current state
+   * setSearchTerm: a function to update this state (state updater function)
+   * useState: used to make the application interactive
+   * useEffect: used to opt into the lifecycle of your components
+   */
+
+  const [searchTerm, setSearchTerm] = React.useState(
+    localStorage.getItem("search") || "React"
+  );
+
   React.useEffect(() => {
-    localStorage.setItem('search', searchTerm);
+    localStorage.setItem("search", searchTerm);
   }, [searchTerm]);
 
   const handleSearch = (event) => {
@@ -135,7 +158,7 @@ console.log(dennis.getName());
 
 export default App;
 
-/**  NOTES 
+/**  NOTES
  *  React State
  *   - react props: used to pass information down the component tree
  *   - react state: used to make applications interactive
