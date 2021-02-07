@@ -6,29 +6,23 @@ import DataList from "../src/components/DataList";
 
 const App = () => {
   const [searchTerm, setSearchTerm] = useSemiPersistentState("search", "React");
-  const [stories, dispatchStories] = React.useReducer(storiesReducer, []);
-  const [isLoading, setIsLoading] = React.useState(false);
-  const [isError, setIsError] = React.useState(false);
+  const [stories, dispatchStories] = React.useReducer(storiesReducer, {data: [], isLoading: false, isError: false});
 
   React.useEffect(() => {
-    setIsLoading(true);
+    dispatchStories({ type: 'STORIES_FETCH_INIT' });
 
     getAsyncStories()
       .then((result) => {
         dispatchStories({
-          type: "SET_STORIES",
+          type: 'STORIES_FETCH_SUCCESS',
           payload: result.data.stories,
-        });
-
-        setIsLoading(false);
+        }); 
       })
-      .catch(() => setIsError(true));
+      .catch(() => 
+        dispatchStories({ type: 'STORIES_FETCH_FAILURE' }));
   }, []);
 
   const handleRemoveStory = (item) => {
-    const newStories = stories.filter(
-      (story) => item.objectID !== story.objectID
-    );
     dispatchStories({
       type: "REMOVE_STORY",
       payload: item,
@@ -37,10 +31,10 @@ const App = () => {
 
   const handleSearch = (event) => {
     setSearchTerm(event.target.value);
-    localStorage.setItem("search", event.target.value);
+    // localStorage.setItem("search", event.target.value);
   };
 
-  const searchedStories = stories.filter((story) => {
+  const searchedStories = stories.data.filter((story) => {
     return story.title.toLowerCase().includes(searchTerm.toLowerCase());
   });
 
@@ -59,14 +53,14 @@ const App = () => {
 
       <hr />
 
-      {isError && <p> Something went wrong ... </p>}
+      {stories.isError && <p> Something went wrong ... </p>}
 
       {/* conditional rendering in JSX */}
-      {isLoading ? (
+      {stories.isLoading ? (
         <p>Loading ...</p>
       ) : (
-        <List list={searchedStories} onRemoveItem={handleRemoveStory} />
-      )}
+          <List list={searchedStories} onRemoveItem={handleRemoveStory} />
+        )}
     </div>
   );
 };
@@ -95,29 +89,49 @@ const getAsyncStories = () =>
    *  creating delay for network request API delays
    *  delay when resolving the promise
    */
-  new Promise((resolve) =>
-    setTimeout(() => resolve({ data: { stories: initialStories } }), 2000)
-  );
+  new Promise((resolve, reject) => setTimeout(reject, 2000));
+
+
 
 const storiesReducer = (state, action) => {
+  console.log(state);
+  console.log(action.type);
+
   // refactor to switch statement
   switch (action.type) {
-    case "SET_STORIES":
-      return action.payload;
-
-    case "REMOVE_STORY":
-      return state.filter(
-        (story) => action.payload.objectID !== story.objectID
-      );
-
-    default:
+    case 'STORIES_FETCH_INIT':
+      return {
+        ...state,
+        isLoading: true,
+        isError: false,
+      };
+    case 'STORIES_FETCH_SUCCESS':
+      return {
+        ...state,
+        isLoading: false,
+        isError: false,
+        data: action.payload,
+      };
+    case 'STORIES_FETCH_FAILURE':
+      return {
+        ...state,
+        isLoading: false,
+        isError: true,
+      };
+    case 'REMOVE_STORY':
+      return {
+        ...state,
+        data: state.data.filter(
+          story => action.payload.objectID !== story.objectID
+        ),
+      }
+    default: 
       throw new Error();
   }
 };
 
 const InputWithLabel = ({
   id,
-  label,
   value,
   type = "text",
   onInputChange,
