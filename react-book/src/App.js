@@ -6,20 +6,23 @@ import DataList from "../src/components/DataList";
 
 const App = () => {
   const [searchTerm, setSearchTerm] = useSemiPersistentState("search", "React");
-  const [stories, dispatchStories] = React.useReducer(storiesReducer, {data: [], isLoading: false, isError: false});
+  const [stories, dispatchStories] = React.useReducer(storiesReducer, {
+    data: [],
+    isLoading: false,
+    isError: false,
+  });
 
   React.useEffect(() => {
-    dispatchStories({ type: 'STORIES_FETCH_INIT' });
+    dispatchStories({ type: "STORIES_FETCH_INIT" });
 
     getAsyncStories()
       .then((result) => {
         dispatchStories({
-          type: 'STORIES_FETCH_SUCCESS',
+          type: "STORIES_FETCH_SUCCESS",
           payload: result.data.stories,
-        }); 
+        });
       })
-      .catch(() => 
-        dispatchStories({ type: 'STORIES_FETCH_FAILURE' }));
+      .catch(() => dispatchStories({ type: "STORIES_FETCH_FAILURE" }));
   }, []);
 
   const handleRemoveStory = (item) => {
@@ -59,8 +62,8 @@ const App = () => {
       {stories.isLoading ? (
         <p>Loading ...</p>
       ) : (
-          <List list={searchedStories} onRemoveItem={handleRemoveStory} />
-        )}
+        <List list={searchedStories} onRemoveItem={handleRemoveStory} />
+      )}
     </div>
   );
 };
@@ -89,9 +92,9 @@ const getAsyncStories = () =>
    *  creating delay for network request API delays
    *  delay when resolving the promise
    */
-  new Promise((resolve, reject) => setTimeout(reject, 2000));
-
-
+  new Promise((resolve) =>
+    setTimeout(() => resolve({ data: { stories: initialStories } }), 2000)
+  );
 
 const storiesReducer = (state, action) => {
   console.log(state);
@@ -99,33 +102,33 @@ const storiesReducer = (state, action) => {
 
   // refactor to switch statement
   switch (action.type) {
-    case 'STORIES_FETCH_INIT':
+    case "STORIES_FETCH_INIT":
       return {
         ...state,
         isLoading: true,
         isError: false,
       };
-    case 'STORIES_FETCH_SUCCESS':
+    case "STORIES_FETCH_SUCCESS":
       return {
         ...state,
         isLoading: false,
         isError: false,
         data: action.payload,
       };
-    case 'STORIES_FETCH_FAILURE':
+    case "STORIES_FETCH_FAILURE":
       return {
         ...state,
         isLoading: false,
         isError: true,
       };
-    case 'REMOVE_STORY':
+    case "REMOVE_STORY":
       return {
         ...state,
         data: state.data.filter(
-          story => action.payload.objectID !== story.objectID
+          (story) => action.payload.objectID !== story.objectID
         ),
-      }
-    default: 
+      };
+    default:
       throw new Error();
   }
 };
