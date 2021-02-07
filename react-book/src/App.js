@@ -12,18 +12,33 @@ const App = () => {
     isError: false,
   });
 
-  React.useEffect(() => {
+  const handleFetchStories = React.useCallback(() => {
+    /**
+     *  move all data fetching logic into standalone function outside the side-effect
+     */
+    if (!searchTerm) return;
     dispatchStories({ type: "STORIES_FETCH_INIT" });
+    getAsyncStories();
 
-    getAsyncStories()
+    // native browsers fetch API used to make request
+    fetch(`${API_ENDPOINT}${searchTerm}`)
+      .then((response) => response.json()) //for fetch API, response needs to be translated into JSON
       .then((result) => {
         dispatchStories({
           type: "STORIES_FETCH_SUCCESS",
-          payload: result.data.stories,
+          payload: result.hits, // returned result follows diff data structure sent as payload to component state
         });
       })
       .catch(() => dispatchStories({ type: "STORIES_FETCH_FAILURE" }));
-  }, []);
+  }, [searchTerm]);
+
+  React.useEffect(() => {
+    /**
+     * useCallback hook creates a memoized function every time its dependency array changes
+     * as a result, useEffect hook runs again bc it depends on new function
+     */
+    handleFetchStories();
+  }, [handleFetchStories]);
 
   const handleRemoveStory = (item) => {
     dispatchStories({
@@ -62,7 +77,7 @@ const App = () => {
       {stories.isLoading ? (
         <p>Loading ...</p>
       ) : (
-        <List list={searchedStories} onRemoveItem={handleRemoveStory} />
+        <List list={stories.data} onRemoveItem={handleRemoveStory} />
       )}
     </div>
   );
@@ -86,6 +101,8 @@ const initialStories = [
     objectID: 1,
   },
 ];
+
+const API_ENDPOINT = "https://hn.algolia.com/api/v1/search?query=";
 
 const getAsyncStories = () =>
   /**
@@ -287,6 +304,16 @@ console.log(dennis.getName());
 export default App;
 
 /**  NOTES
+ *  Memoixed Handler
+ *    1. Move all data fetching logic into a standalone function outside the side-effect
+ *    2. Wrap into a useCallback hook
+ *    3. Invoke it in useEffect hook
+ *
+ *  Template Literal
+ *    const greeting = 'Hello';
+ *    const anotherWelcome = `${greeting} React`;
+ *    console.log(anotherWelcome);
+ *
  *  React State
  *   - react props: used to pass information down the component tree
  *   - react state: used to make applications interactive
