@@ -1,4 +1,5 @@
 import React, { Children } from "react";
+import axios from "axios";
 import "./App.css";
 import "bootstrap/dist/css/bootstrap.min.css";
 import { Container, Row, Col } from "react-bootstrap";
@@ -12,25 +13,35 @@ const App = () => {
     isError: false,
   });
 
-  const handleFetchStories = React.useCallback(() => {
-    /**
-     *  move all data fetching logic into standalone function outside the side-effect
-     */
-    if (!searchTerm) return;
-    dispatchStories({ type: "STORIES_FETCH_INIT" });
-    getAsyncStories();
+  const [url, setUrl] = React.useState(`${API_ENDPOINT}${searchTerm}`);
 
-    // native browsers fetch API used to make request
-    fetch(`${API_ENDPOINT}${searchTerm}`)
-      .then((response) => response.json()) //for fetch API, response needs to be translated into JSON
-      .then((result) => {
-        dispatchStories({
-          type: "STORIES_FETCH_SUCCESS",
-          payload: result.hits, // returned result follows diff data structure sent as payload to component state
-        });
-      })
-      .catch(() => dispatchStories({ type: "STORIES_FETCH_FAILURE" }));
-  }, [searchTerm]);
+  const handleFetchStories = React.useCallback(async () => {
+    dispatchStories({ type: "STORIES_FETCH_INIT" });
+
+    /**
+     * axios performs asynchronous request to remote API's
+     * takes the url as an argument and returns a promise
+     */
+    try {
+      const result = await axios.get(url);
+
+      dispatchStories({
+        type: "STORIES_FETCH_SUCCESS",
+        payload: result.data.hits,
+      });
+    } catch {
+      dispatchStories({ type: "STORIES_FETCH_FAILURE" });
+    }
+  }, [url]);
+
+  const handleSearchInput = (event) => {
+    setSearchTerm(event.target.value);
+  };
+
+  const handleSearchSubmit = (event) => {
+    setUrl(`${API_ENDPOINT}${searchTerm}`);
+    event.preventDefault();
+  };
 
   React.useEffect(() => {
     /**
@@ -52,23 +63,20 @@ const App = () => {
     // localStorage.setItem("search", event.target.value);
   };
 
-  const searchedStories = stories.data.filter((story) => {
-    return story.title.toLowerCase().includes(searchTerm.toLowerCase());
-  });
+  // const searchedStories = stories.data.filter((story) => {
+  //   return story.title.toLowerCase().includes(searchTerm.toLowerCase());
+  // });
 
   return (
     <div className="App">
       <h1> My Hacker Stories</h1>
-      <InputWithLabel
-        id="search"
-        label="Search"
-        value={searchTerm}
-        isFocused
-        onInputChange={handleSearch}
-      >
-        <strong> Search : </strong>
-      </InputWithLabel>
 
+      <SearchForm 
+        onSearchTerm = {searchTerm}
+        onSearchInput = {handleSearchInput}
+        onSearchSubmit = {handleSearchSubmit}  
+      />
+      
       <hr />
 
       {stories.isError && <p> Something went wrong ... </p>}
@@ -187,6 +195,28 @@ const InputWithLabel = ({
   );
 };
 
+const SearchForm = ({ searchTerm, onSearchInput, onSearchSubmit }) => (
+  <form onSubmit={onSearchSubmit}>
+    <InputWithLabel
+      id="search"
+      label="Search"
+      value={searchTerm}
+      isFocused
+      onInputChange={onSearchInput}
+    >
+      <strong> Search : </strong>
+    </InputWithLabel>
+
+    <button
+      type="button"
+      disabled={!searchTerm}
+      // onClick={handleSearchSubmit}
+    >
+      {" "}
+      Submit{" "}
+    </button>
+  </form>
+);
 const List = ({ list, onRemoveItem }) =>
   /**
    * spread operator: allows to spread all key/value pairs of an object to another object
