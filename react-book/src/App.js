@@ -1,9 +1,8 @@
-import React, { Children } from "react";
+import React from "react";
 import axios from "axios";
-import "./App.css";
+// import "./App.css";
+import styles from "./App.module.css";
 import "bootstrap/dist/css/bootstrap.min.css";
-import { Container, Row, Col } from "react-bootstrap";
-import DataList from "../src/components/DataList";
 
 const App = () => {
   const [searchTerm, setSearchTerm] = useSemiPersistentState("search", "React");
@@ -68,15 +67,15 @@ const App = () => {
   // });
 
   return (
-    <div className="App">
-      <h1> My Hacker Stories</h1>
+    <div className="container">
+      <h1 className="headline-primary"> My Hacker Stories</h1>
 
-      <SearchForm 
-        onSearchTerm = {searchTerm}
-        onSearchInput = {handleSearchInput}
-        onSearchSubmit = {handleSearchSubmit}  
+      <SearchForm
+        onSearchTerm={searchTerm}
+        onSearchInput={handleSearchInput}
+        onSearchSubmit={handleSearchSubmit}
       />
-      
+
       <hr />
 
       {stories.isError && <p> Something went wrong ... </p>}
@@ -111,15 +110,6 @@ const initialStories = [
 ];
 
 const API_ENDPOINT = "https://hn.algolia.com/api/v1/search?query=";
-
-const getAsyncStories = () =>
-  /**
-   *  creating delay for network request API delays
-   *  delay when resolving the promise
-   */
-  new Promise((resolve) =>
-    setTimeout(() => resolve({ data: { stories: initialStories } }), 2000)
-  );
 
 const storiesReducer = (state, action) => {
   console.log(state);
@@ -180,7 +170,7 @@ const InputWithLabel = ({
 
   return (
     <>
-      <label htmlFor={id}> {children} </label>
+      <label htmlFor={id} className="label"> {children} </label>
       &nbsp;
       {/* ref={inputRed}: assigned to changable current property */}
       <input
@@ -190,13 +180,14 @@ const InputWithLabel = ({
         value={value}
         autoFocus={isFocused}
         onChange={onInputChange}
+        className="input"
       />
     </>
   );
 };
 
 const SearchForm = ({ searchTerm, onSearchInput, onSearchSubmit }) => (
-  <form onSubmit={onSearchSubmit}>
+  <form onSubmit={onSearchSubmit} className="search-form">
     <InputWithLabel
       id="search"
       label="Search"
@@ -210,6 +201,7 @@ const SearchForm = ({ searchTerm, onSearchInput, onSearchSubmit }) => (
     <button
       type="button"
       disabled={!searchTerm}
+      className="button button_large"
       // onClick={handleSearchSubmit}
     >
       {" "}
@@ -217,6 +209,7 @@ const SearchForm = ({ searchTerm, onSearchInput, onSearchSubmit }) => (
     </button>
   </form>
 );
+
 const List = ({ list, onRemoveItem }) =>
   /**
    * spread operator: allows to spread all key/value pairs of an object to another object
@@ -238,26 +231,52 @@ const Item = ({ item, onRemoveItem }) => {
   //   onRemoveItem(item);
   // };
   return (
-    <div>
-      <span>
+    <div className="item">
+      <span style={{ width: '40%'}}>
         <a href={item.url}> {item.title} </a>
       </span>
 
-      <span>{item.author}</span>
-      <span>{item.num_comments}</span>
-      <span>{item.points}</span>
-      <span>
+      <span style={{ width: '30%'}}>{item.author}</span>
+      <span style={{ width: '10%'}}>{item.num_comments}</span>
+      <span style={{ width: '10%'}}>{item.points}</span>
+      <span style={{ width: '10%'}}>
         {/* inline handlers: allows to excute the function in JSX
             Bind Method: onClick={onRemoveItem.bind(null,item)}
             (do not use for complex functions) Wrapping Arrow Function: onClick={() => onRemoveItem(item)} 
         */}
-        <button type="button" onClick={onRemoveItem.bind(null, item)}>
+        <button type="button" onClick={onRemoveItem.bind(null, item)} className="button button_small">
           Dismiss
         </button>
       </span>
     </div>
   );
 };
+
+const useSemiPersistentState = (key, initialState) => {
+  /** useSemiPersistantState: custom hook
+   *  - pass in a key in order to fix overwrite of the 'value' allocated in local storage
+   *    when custom hook is used more than once
+   *  - give custom hook initial state from outside
+   *  - manages state yet synchronizes with the local storage
+   *  - no fully consistent; clearing local storage browser deletes relevant data from application
+   */
+  const [value, setValue] = React.useState(
+    localStorage.getItem(key) || initialState
+  );
+  React.useEffect(() => {
+    localStorage.setItem(key, value);
+  }, [value, key]);
+  return [value, setValue];
+};
+
+const getAsyncStories = () =>
+  /**
+   *  creating delay for network request API delays
+   *  delay when resolving the promise
+   */
+  new Promise((resolve) =>
+    setTimeout(() => resolve({ data: { stories: initialStories } }), 2000)
+  );
 
 const Search = ({ search, onSearch }) => {
   /**
@@ -296,40 +315,6 @@ const Search = ({ search, onSearch }) => {
     </>
   );
 };
-
-const useSemiPersistentState = (key, initialState) => {
-  /** useSemiPersistantState: custom hook
-   *  - pass in a key in order to fix overwrite of the 'value' allocated in local storage
-   *    when custom hook is used more than once
-   *  - give custom hook initial state from outside
-   *  - manages state yet synchronizes with the local storage
-   *  - no fully consistent; clearing local storage browser deletes relevant data from application
-   */
-  const [value, setValue] = React.useState(
-    localStorage.getItem(key) || initialState
-  );
-  React.useEffect(() => {
-    localStorage.setItem(key, value);
-  }, [value, key]);
-  return [value, setValue];
-};
-
-class Developer {
-  constructor(firstName, lastName) {
-    this.firstName = firstName;
-    this.lastName = lastName;
-  }
-
-  getName() {
-    return this.firstName + " " + this.lastName;
-  }
-}
-
-const robin = new Developer("Robin", "Wieruch");
-const dennis = new Developer("Dennis", "Wieruch");
-
-console.log(robin.getName());
-console.log(dennis.getName());
 
 export default App;
 
