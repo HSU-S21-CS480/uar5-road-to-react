@@ -43,7 +43,7 @@
   padding: 5px;
   cursor: pointer;
 
-  transition: all 0.1s ease-in !important;
+  transition: all 0.1s ease-in;
 }
 
 .button:hover{
@@ -51,11 +51,16 @@
   color: #ffffff;
 }
 
-.button_small {
+.button:hover > svg > g {
+  fill: #ffffff;
+  stroke: #ffffff;
+}
+
+.buttonSmall {
   padding: 5px;
 }
 
-.button_large {
+.buttonLarge {
   padding: 10px;
 }
 
@@ -68,7 +73,7 @@
   color: #171212;
 }
 
-.headline-primary {
+.headlinePrimary {
   font-size: 25px;
   font-weight: 300;
   letter-spacing: 2px;
@@ -106,7 +111,7 @@
   font-size: 20px;
 }
 
-.search-form {
+.searchForm {
   padding: 10px 0 20px 0;
   display: flex;
   align-items: baseline;
