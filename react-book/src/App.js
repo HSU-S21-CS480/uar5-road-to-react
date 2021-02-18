@@ -4,8 +4,8 @@ import axios from "axios";
 import styles from "./App.module.css";
 import "bootstrap/dist/css/bootstrap.min.css";
 import styled from "styled-components";
-import { ReactComponent as Check} from './check.svg';
-import { ReactComponent as CircledX} from './circled-x.svg';
+import { ReactComponent as Check } from "./check.svg";
+import { ReactComponent as CircledX } from "./circled-x.svg";
 
 const App = () => {
   const [searchTerm, setSearchTerm] = useSemiPersistentState("search", "React");
@@ -53,12 +53,19 @@ const App = () => {
     handleFetchStories();
   }, [handleFetchStories]);
 
-  const handleRemoveStory = (item) => {
+  const handleRemoveStory = React.useCallback((item) => {
     dispatchStories({
       type: "REMOVE_STORY",
       payload: item,
     });
-  };
+  }, []);
+
+  // const handleRemoveStory = (item) => {
+  //   dispatchStories({
+  //     type: "REMOVE_STORY",
+  //     payload: item,
+  //   });
+  // };
 
   const handleSearch = (event) => {
     setSearchTerm(event.target.value);
@@ -68,10 +75,15 @@ const App = () => {
   // const searchedStories = stories.data.filter((story) => {
   //   return story.title.toLowerCase().includes(searchTerm.toLowerCase());
   // });
+  console.log("B:App");
+
+  const sumComments = React.useMemo(() => getSumComments(stories), [stories]);
 
   return (
     <StyledContainer>
-      <StyledHeadlinePrimary>My Hacker Stories</StyledHeadlinePrimary>
+      <StyledHeadlinePrimary>
+        My Hacker Stories with {sumComments} comments.
+      </StyledHeadlinePrimary>
 
       <SearchForm
         onSearchTerm={searchTerm}
@@ -193,6 +205,11 @@ const initialStories = [
 
 const API_ENDPOINT = "https://hn.algolia.com/api/v1/search?query=";
 
+const getSumComments = (stories) => {
+  console.log("C");
+  return stories.data.reduce((result, value) => result + value.num_comments, 0);
+};
+
 const storiesReducer = (state, action) => {
   console.log(state);
   console.log(action.type);
@@ -254,13 +271,13 @@ const InputWithLabel = ({
     <>
       <StyledLabel htmlFor={id}>{children}</StyledLabel>
       &nbsp;
-
       <StyledInput
         ref={inputRef}
         id={id}
         type={type}
         value={value}
-        onChange={onInputChange}/>
+        onChange={onInputChange}
+      />
     </>
   );
 };
@@ -282,21 +299,33 @@ const SearchForm = ({ searchTerm, onSearchInput, onSearchSubmit }) => (
   </StyledSearchForm>
 );
 
-const List = ({ list, onRemoveItem }) =>
+// const List = ({ list, onRemoveItem }) =>
+//   /**
+//    * spread operator: allows to spread all key/value pairs of an object to another object
+//    *  - instead of passing each property one at a time via props from List to Item component,
+//    *    we can use Javascripts spead operator to pass all the object's key/value pairs as
+//    *    attribute/value pairs to a JSX element
+//    *
+//    *  rest parameters: allows a function to accept an infinite number of arguments as an array,
+//    *                    providing a way to represent variadic functions in js
+//    *   - happens always as the last part of an object destructing; on the right side of an assignment
+//    *   - always used to seperate an object from some of its properties
+//    */
+//   console.log('B:List') ||
+//   list.map((item) => (
+//     <Item key={item.objectID} item={item} onRemoveItem={onRemoveItem} />
+//   ));
+
+const List = React.memo(
   /**
-   * spread operator: allows to spread all key/value pairs of an object to another object
-   *  - instead of passing each property one at a time via props from List to Item component,
-   *    we can use Javascripts spead operator to pass all the object's key/value pairs as
-   *    attribute/value pairs to a JSX element
-   *
-   *  rest parameters: allows a function to accept an infinite number of arguments as an array,
-   *                    providing a way to represent variadic functions in js
-   *   - happens always as the last part of an object destructing; on the right side of an assignment
-   *   - always used to seperate an object from some of its properties
+   * Use React.memo API to make the equality check for the props
    */
-  list.map((item) => (
-    <Item key={item.objectID} item={item} onRemoveItem={onRemoveItem} />
-  ));
+  ({ list, onRemoveItem }) =>
+    console.log("B:List") ||
+    list.map((item) => (
+      <Item key={item.objectID} item={item} onRemoveItem={onRemoveItem} />
+    ))
+);
 
 const Item = ({ item, onRemoveItem }) => {
   // const handleRemoveItem = () => {
@@ -317,7 +346,7 @@ const Item = ({ item, onRemoveItem }) => {
             (do not use for complex functions) Wrapping Arrow Function: onClick={() => onRemoveItem(item)} 
         */}
         <StyledButtonSmall type="button" onClick={() => onRemoveItem(item)}>
-          <Check height="18px" width="18px"/>
+          <Check height="18px" width="18px" />
         </StyledButtonSmall>
       </StyledColumn>
     </StyledItem>
@@ -332,11 +361,19 @@ const useSemiPersistentState = (key, initialState) => {
    *  - manages state yet synchronizes with the local storage
    *  - no fully consistent; clearing local storage browser deletes relevant data from application
    */
+
+  const isMounted = React.useRef(false);
+
   const [value, setValue] = React.useState(
     localStorage.getItem(key) || initialState
   );
   React.useEffect(() => {
-    localStorage.setItem(key, value);
+    if (!isMounted.current) {
+      isMounted.current = true;
+    } else {
+      console.log("A");
+      localStorage.setItem(key, value);
+    }
   }, [value, key]);
   return [value, setValue];
 };
