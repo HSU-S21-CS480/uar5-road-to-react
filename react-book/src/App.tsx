@@ -3,7 +3,8 @@ import axios from "axios";
 // import "./App.css";
 import styles from "./App.module.css";
 import "bootstrap/dist/css/bootstrap.min.css";
-import styled from "styled-components";
+import styled from 'styled-components';
+import { } from "styled-components/cssprop";
 import { ReactComponent as Check } from "./check.svg";
 import { ReactComponent as CircledX } from "./circled-x.svg";
 
@@ -36,14 +37,18 @@ const App = () => {
     }
   }, [url]);
 
-  const handleSearchInput = (event) => {
+  const handleSearchInput = (
+    event: React.ChangeEvent<HTMLInputElement>
+  ) => {
     setSearchTerm(event.target.value);
-  };
+  }
 
-  const handleSearchSubmit = (event) => {
+  const handleSearchSubmit = (
+    event: React.FormEvent<HTMLFormElement>
+  ) => {
     setUrl(`${API_ENDPOINT}${searchTerm}`);
     event.preventDefault();
-  };
+  }
 
   React.useEffect(() => {
     /**
@@ -53,40 +58,23 @@ const App = () => {
     handleFetchStories();
   }, [handleFetchStories]);
 
-  const handleRemoveStory = React.useCallback((item) => {
+  const handleRemoveStory = (item: Story) => {
     dispatchStories({
       type: "REMOVE_STORY",
       payload: item,
     });
-  }, []);
-
-  // const handleRemoveStory = (item) => {
-  //   dispatchStories({
-  //     type: "REMOVE_STORY",
-  //     payload: item,
-  //   });
-  // };
-
-  const handleSearch = (event) => {
-    setSearchTerm(event.target.value);
-    // localStorage.setItem("search", event.target.value);
   };
 
-  // const searchedStories = stories.data.filter((story) => {
-  //   return story.title.toLowerCase().includes(searchTerm.toLowerCase());
-  // });
   console.log("B:App");
-
-  const sumComments = React.useMemo(() => getSumComments(stories), [stories]);
 
   return (
     <StyledContainer>
       <StyledHeadlinePrimary>
-        My Hacker Stories with {sumComments} comments.
+        My Hacker Stories
       </StyledHeadlinePrimary>
 
       <SearchForm
-        onSearchTerm={searchTerm}
+        searchTerm={searchTerm}
         onSearchInput={handleSearchInput}
         onSearchSubmit={handleSearchSubmit}
       />
@@ -105,6 +93,71 @@ const App = () => {
   );
 };
 
+type Story = {
+  objectID: string;
+  url: string;
+  title: string;
+  author: string;
+  num_comments: number;
+  points: number;
+};
+
+type ItemProps = {
+  item: Story;
+  onRemoveItem: (item: Story) => void;
+};
+
+type Stories = Array<Story>;
+
+type ListProps = {
+  list: Stories;
+  onRemoveItem: (item: Story) => void;
+};
+
+type StoriesState = {
+  data: Stories;
+  isLoading: boolean;
+  isError: boolean;
+};
+
+interface StoriesFetchInitAction {
+  type: 'STORIES_FETCH_INIT';
+};
+
+interface StoriesFetchSuccessAction {
+  type: 'STORIES_FETCH_SUCCESS';
+  payload: Stories;
+};
+
+interface StoriesFetchFailureAction {
+  type: 'STORIES_FETCH_FAILURE';
+};
+
+interface StoriesRemoveAction {
+  type: 'REMOVE_STORY';
+  payload: Story;
+};
+
+type StoriesAction = 
+  | StoriesFetchInitAction
+  | StoriesFetchSuccessAction
+  | StoriesFetchFailureAction
+  | StoriesRemoveAction;
+
+type SearchFormProps = {
+  searchTerm: string;
+  onSearchInput: (event: React.ChangeEvent<HTMLInputElement>) => void;
+  onSearchSubmit: (event: React.FormEvent<HTMLFormElement>) => void;
+};
+
+type InputWithLabelProps = {
+  id: string;
+  value: string;
+  type?: string;
+  onInputChange: (event: React.ChangeEvent<HTMLInputElement>) => void;
+  isFocused?: boolean;
+  children: React.ReactNode;
+};
 const StyledContainer = styled.div`
   height: 100vw;
   padding: 20px;
@@ -128,6 +181,7 @@ const StyledItem = styled.div`
 `;
 
 const StyledColumn = styled.span`
+
   padding: 0 5px;
   white-span: nowrap;
   overflow: hidden;
@@ -138,8 +192,22 @@ const StyledColumn = styled.span`
     color: inherit;
   }
 
-  width: ${(props) => props.width};
+  width: ${props => props.width};
 `;
+
+// const StyledColumn = styled.span<{active: boolean }>`
+// padding: 0 5px;
+// white-span: nowrap;
+// overflow: hidden;
+// white-space: nowrap;
+// text-overflow: ellipsis;
+
+// a {
+//   color: inherit;
+// }
+
+// width: ${props => props.width};
+// `;
 
 const StyledButton = styled.button`
   background: transparent;
@@ -205,12 +273,7 @@ const initialStories = [
 
 const API_ENDPOINT = "https://hn.algolia.com/api/v1/search?query=";
 
-const getSumComments = (stories) => {
-  console.log("C");
-  return stories.data.reduce((result, value) => result + value.num_comments, 0);
-};
-
-const storiesReducer = (state, action) => {
+const storiesReducer = (state: StoriesState, action: StoriesAction) => {
   console.log(state);
   console.log(action.type);
 
@@ -247,17 +310,17 @@ const storiesReducer = (state, action) => {
   }
 };
 
-const InputWithLabel = ({
-  id,
-  value,
-  type = "text",
+const InputWithLabel = ({ 
+  id, 
+  value, 
+  type="text",
   onInputChange,
   isFocused,
   children,
-}) => {
+ }: InputWithLabelProps) => {
   // create ref with useRef hook; has persistent value stays intact over the lifetime of the component
   // ref comes with property current; in contrast to ref, current is changeable
-  const inputRef = React.useRef();
+  const inputRef = React.useRef<HTMLInputElement>(null!);
 
   // useEffect hook performing focuse on input field when component renders (or dependencies change)
   React.useEffect(() => {
@@ -282,7 +345,7 @@ const InputWithLabel = ({
   );
 };
 
-const SearchForm = ({ searchTerm, onSearchInput, onSearchSubmit }) => (
+const SearchForm = ({ searchTerm, onSearchInput, onSearchSubmit }: SearchFormProps) => (
   <StyledSearchForm onSubmit={onSearchSubmit}>
     <InputWithLabel
       id="search"
@@ -316,22 +379,19 @@ const SearchForm = ({ searchTerm, onSearchInput, onSearchSubmit }) => (
 //     <Item key={item.objectID} item={item} onRemoveItem={onRemoveItem} />
 //   ));
 
-const List = React.memo(
-  /**
-   * Use React.memo API to make the equality check for the props
-   */
-  ({ list, onRemoveItem }) =>
-    console.log("B:List") ||
-    list.map((item) => (
-      <Item key={item.objectID} item={item} onRemoveItem={onRemoveItem} />
-    ))
+const List = ({ list, onRemoveItem}: ListProps) => (
+  <>
+    {list.map(item => (
+      <Item 
+        key={item.objectID}
+        item={item}
+        onRemoveItem={onRemoveItem}
+      />
+    ))}
+  </>
 );
 
-const Item = ({ item, onRemoveItem }) => {
-  // const handleRemoveItem = () => {
-  //   onRemoveItem(item);
-  // };
-  return (
+const Item = ({ item, onRemoveItem}: ItemProps) => (
     <StyledItem>
       <StyledColumn width="40%">
         <a href={item.url}> {item.title} </a>
@@ -350,10 +410,11 @@ const Item = ({ item, onRemoveItem }) => {
         </StyledButtonSmall>
       </StyledColumn>
     </StyledItem>
-  );
-};
+);
 
-const useSemiPersistentState = (key, initialState) => {
+const useSemiPersistentState = (
+  key: string, 
+  initialState: string) : [string, (newValue: string) => void ] => {
   /** useSemiPersistantState: custom hook
    *  - pass in a key in order to fix overwrite of the 'value' allocated in local storage
    *    when custom hook is used more than once
@@ -386,44 +447,6 @@ const getAsyncStories = () =>
   new Promise((resolve) =>
     setTimeout(() => resolve({ data: { stories: initialStories } }), 2000)
   );
-
-const Search = ({ search, onSearch }) => {
-  /**
-   * searchTerm: represents the current state
-   * setSearchTerm: a function to update this state (state updater function)
-   * useState: used to make the application interactive
-   * useEffect: used to opt into the lifecycle of your components
-   */
-
-  const [searchTerm, setSearchTerm] = React.useState(
-    localStorage.getItem("search") || "React"
-  );
-
-  React.useEffect(() => {
-    localStorage.setItem("search", searchTerm);
-  }, [searchTerm]);
-
-  const handleSearch = (event) => {
-    setSearchTerm(event.target.value);
-  };
-
-  return (
-    <>
-      {/* React Fragment: wraps other elements into a single top-level element without adding to rendered output */}
-      {/* Synthetic Event: using browsers developer tools see loggin occur after you type into the input field */}
-      {/* do not onChange={ handleChange() } */}
-
-      <label key="1" htmlFor="search">
-        {" "}
-        Search:{" "}
-      </label>
-      <input id="search" type="text" value={search} onChange={onSearch} />
-      <p>
-        Searching for <strong>{searchTerm}</strong>
-      </p>
-    </>
-  );
-};
 
 export default App;
 
