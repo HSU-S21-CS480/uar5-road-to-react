@@ -1,10 +1,7 @@
 import React from "react";
 import axios from "axios";
-// import "./App.css";
-import styles from "./App.module.css";
 import "bootstrap/dist/css/bootstrap.min.css";
 import styled from 'styled-components';
-// import { } from "styled-components/cssprop";
 import { ReactComponent as Check } from "./check.svg";
 import { ReactComponent as CircledX } from "./circled-x.svg";
 
@@ -180,21 +177,6 @@ const StyledItem = styled.div`
   padding-bottom: 5px;
 `;
 
-// const StyledColumn = styled.span`
-
-//   padding: 0 5px;
-//   white-span: nowrap;
-//   overflow: hidden;
-//   white-space: nowrap;
-//   text-overflow: ellipsis;
-
-//   a {
-//     color: inherit;
-//   }
-
-//   width: ${props => props.width};
-// `;
-
 const StyledColumn = styled.span<{width: string }>`
 padding: 0 5px;
 white-span: nowrap;
@@ -274,8 +256,8 @@ const initialStories = [
 const API_ENDPOINT = "https://hn.algolia.com/api/v1/search?query=";
 
 const storiesReducer = (state: StoriesState, action: StoriesAction) => {
-  console.log(state);
-  console.log(action.type);
+  // console.log(state);
+  // console.log(action.type);
 
   // refactor to switch statement
   switch (action.type) {
@@ -449,6 +431,7 @@ const getAsyncStories = () =>
   );
 
 export default App;
+export {storiesReducer, SearchForm, InputWithLabel, List, Item};
 
 /**  NOTES
  *  Memoixed Handler
